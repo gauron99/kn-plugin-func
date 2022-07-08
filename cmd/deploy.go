@@ -123,6 +123,9 @@ func runDeploy(cmd *cobra.Command, _ []string, newClient ClientFactory) (err err
 	// save image digest if provided in --image
 	if imageDigestProvided {
 		function.ImageDigest = imageSplit[1]
+	// check if function has namespace
+	if function.Namespace == "" {
+		// set namespace to default / current context
 	}
 
 	function.Envs, _, err = mergeEnvs(function.Envs, config.EnvToUpdate, config.EnvToRemove)
