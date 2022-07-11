@@ -20,6 +20,7 @@ import (
 	"knative.dev/kn-plugin-func/buildpacks"
 	"knative.dev/kn-plugin-func/docker"
 	"knative.dev/kn-plugin-func/docker/creds"
+	"knative.dev/kn-plugin-func/k8s"
 	"knative.dev/kn-plugin-func/s2i"
 )
 
@@ -123,9 +124,12 @@ func runDeploy(cmd *cobra.Command, _ []string, newClient ClientFactory) (err err
 	// save image digest if provided in --image
 	if imageDigestProvided {
 		function.ImageDigest = imageSplit[1]
+	}
+
 	// check if function has namespace
-	if function.Namespace == "" {
-		// set namespace to default / current context
+	function, err = checkNamespaceDeploy(function, config)
+	if err != nil {
+		return
 	}
 
 	function.Envs, _, err = mergeEnvs(function.Envs, config.EnvToUpdate, config.EnvToRemove)
@@ -547,4 +551,29 @@ func parseImageDigest(imageSplit []string, config deployConfig, cmd *cobra.Comma
 	config.Image = imageSplit[0]
 
 	return config, nil
+}
+
+// check current namespace
+func checkNamespaceDeploy(f fn.Function, c deployConfig) (fn.Function, error) {
+	currNamespace, err := k8s.GetNamespace("")
+	if err != nil {
+		return f, err
+	}
+
+	// If ns exists in func.yaml & not given via CLI (--namespace) & current ns doesnt match func.yaml ns
+	if f.Namespace != "" && c.Namespace == "" && (currNamespace != f.Namespace) {
+		fmt.Printf("Warning: Current namespace '%s' does not match func.yaml (%s). Function is deploying at '%s' namespace\n", currNamespace, f.Namespace, f.Namespace)
+	}
+
+	// Add current namespace to func.yaml if it is not set yet or given via --namespace.
+	// This usually means first deployment
+	if f.Namespace == "" {
+		f.Namespace = currNamespace
+		if err != nil {
+			return f, err
+		}
+		fmt.Printf("Adding namespace '%s' into func.yaml for first deployment\n", f.Namespace)
+	}
+
+	return f, nil
 }
