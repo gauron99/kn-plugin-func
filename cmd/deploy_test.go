@@ -226,12 +226,14 @@ runtime: go`,
 			image:     "docker.io/4141gauron3268/static_test_digest:latest@sha256:7d66645b0add6de7af77ef332ecd4728649a2f03b9a2716422a054805b595c4eX",
 			errString: "sha256 hash in 'sha256:7d66645b0add6de7af77ef332ecd4728649a2f03b9a2716422a054805b595c4eX' from --image has the wrong length (65), should be 64",
 			funcFile: `name: test-func
+
 runtime: go`,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			deployer := mock.NewDeployer()
+			defer Fromtemp(t)()
 			cmd := NewDeployCmd(NewClientFactory(func() *fn.Client {
 				return fn.New(
 					fn.WithDeployer(deployer))
@@ -267,6 +269,81 @@ runtime: go`,
 					t.Fatalf("Error expected to be (%v) but was (%v)", tt.errString, err)
 				}
 			}
+		})
+	}
+}
+
+func Test_namespaceCheck(t *testing.T) {
+	tests := []struct {
+		name          string
+		namespace     string
+		currNamespace string
+		errString     string
+		funcFile      string
+	}{
+		{
+			name: "first deployment(no ns in func.yaml), not given via cli, expect write in func.yaml",
+			funcFile: `name: test-func
+runtime: go`,
+		},
+		{
+			name:          "ns in func.yaml, not given via cli, current ns matches func.yaml",
+			currNamespace: "default",
+			funcFile: `name: test-func
+namespace: "default"
+runtime: go`,
+		},
+		{
+			name:          "ns in func.yaml, given via cli (always overrides = no error/warn), expect override",
+			namespace:     "default",
+			currNamespace: "not-default",
+			funcFile: `name: test-func
+namespace: "default"
+runtime: go`,
+		},
+		{
+			name:          "ns in func,yaml, not given via cli, current ns does NOT match func,yaml (print warning), expect warning",
+			currNamespace: "not-default",
+			funcFile: `name: test-func
+namespace: "default"
+runtime: go`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			deployer := mock.NewDeployer()
+			defer Fromtemp(t)()
+			cmd := NewDeployCmd(NewClientFactory(func() *fn.Client {
+				return fn.New(
+					fn.WithDeployer(deployer))
+			}))
+			// set namespace argument if given & reset after
+			if tt.namespace != "" {
+				cmd.SetArgs([]string{}) // Do not use test command args
+				viper.SetDefault("namespace", tt.namespace)
+			}
+			defer viper.Reset()
+
+			// set test case's func.yaml
+			if err := os.WriteFile("func.yaml", []byte(tt.funcFile), os.ModePerm); err != nil {
+				t.Fatal(err)
+			}
+
+			ctx := context.TODO()
+
+			_, err := cmd.ExecuteContextC(ctx)
+			if err != nil {
+				if err := err.Error(); tt.errString != err {
+					t.Fatalf("Error expected to be %v but was %v", tt.errString, err)
+				}
+			}
+
+			fileFunction, err := fn.NewFunction(".")
+
+			if err != nil {
+				t.Fatalf("problem creating function: %v", err)
+			}
+			fmt.Println(fileFunction)
 		})
 	}
 }

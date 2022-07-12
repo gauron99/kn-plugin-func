@@ -553,7 +553,7 @@ func parseImageDigest(imageSplit []string, config deployConfig, cmd *cobra.Comma
 	return config, nil
 }
 
-// check current namespace
+// checkNamespaceDeploy checks current namespace against func.yaml and warns if its different
 func checkNamespaceDeploy(f fn.Function, c deployConfig) (fn.Function, error) {
 	currNamespace, err := k8s.GetNamespace("")
 	if err != nil {
@@ -562,7 +562,7 @@ func checkNamespaceDeploy(f fn.Function, c deployConfig) (fn.Function, error) {
 
 	// If ns exists in func.yaml & not given via CLI (--namespace) & current ns doesnt match func.yaml ns
 	if f.Namespace != "" && c.Namespace == "" && (currNamespace != f.Namespace) {
-		fmt.Printf("Warning: Current namespace '%s' does not match func.yaml (%s). Function is deplyed at '%s' namespace\n", currNamespace, f.Namespace, f.Namespace)
+		fmt.Printf("Warning: Current namespace '%s' does not match func.yaml (%s). Function is deployed at '%s' namespace\n", currNamespace, f.Namespace, f.Namespace)
 	}
 
 	// Add current namespace to func.yaml if it is not set yet or given via --namespace.
