@@ -327,6 +327,7 @@ runtime: go`,
 
 			// create mock kubeconfig with set namespace as 'default'
 			defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", testPath))()
+			defer WithEnvVar(t, "KUBERNETES_MASTER", "/tmp/non-existent.config")()
 
 			// set namespace argument if given & reset after
 			cmd.SetArgs([]string{}) // Do not use test command args
