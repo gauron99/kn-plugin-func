@@ -102,7 +102,7 @@ created: 2009-11-10 23:00:00`,
 		},
 	}
 
-	testPath := cwd()
+	defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", cwd()))()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var captureFn fn.Function
@@ -121,7 +121,6 @@ created: 2009-11-10 23:00:00`,
 			}))
 
 			cmd.SetArgs([]string{}) // Do not use test command args
-			defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", testPath))()
 
 			// TODO: the below viper.SetDefault calls appear to be altering
 			// the default values of flags as a way set various values of flags.
@@ -318,7 +317,7 @@ runtime: go`,
 	}
 
 	// save current dir to use later when tempdir is set
-	testPath := cwd()
+	defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", cwd()))()
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -330,7 +329,6 @@ runtime: go`,
 			}))
 
 			// create mock kubeconfig with set namespace as 'default'
-			defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", testPath))()
 
 			// set namespace argument if given & reset after
 			cmd.SetArgs([]string{}) // Do not use test command args
