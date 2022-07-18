@@ -270,3 +270,7 @@ runtime: go`,
 		})
 	}
 }
+
+// func Test_imageWithDigest(t *testing.T) {
+// 	// testing
+// }
