@@ -101,6 +101,7 @@ created: 2009-11-10 23:00:00`,
 			errString: "remote git arguments require the --build=git flag",
 		},
 	}
+	testPath := cwd()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var captureFn fn.Function
@@ -111,7 +112,7 @@ created: 2009-11-10 23:00:00`,
 				},
 			}
 			deployer := mock.NewDeployer()
-			defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", cwd()))()
+			defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", testPath))()
 			defer Fromtemp(t)()
 			cmd := NewDeployCmd(NewClientFactory(func() *fn.Client {
 				return fn.New(
