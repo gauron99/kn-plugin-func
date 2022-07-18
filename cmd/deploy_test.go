@@ -111,6 +111,7 @@ created: 2009-11-10 23:00:00`,
 				},
 			}
 			deployer := mock.NewDeployer()
+			defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", cwd()))()
 			defer Fromtemp(t)()
 			cmd := NewDeployCmd(NewClientFactory(func() *fn.Client {
 				return fn.New(
@@ -118,7 +119,6 @@ created: 2009-11-10 23:00:00`,
 					fn.WithDeployer(deployer))
 			}))
 
-			defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", cwd()))()
 			cmd.SetArgs([]string{}) // Do not use test command args
 
 			// TODO: the below viper.SetDefault calls appear to be altering
