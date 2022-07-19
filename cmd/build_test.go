@@ -154,11 +154,11 @@ created: 2009-11-10 23:00:00`,
 }
 
 func testBuilderPersistence(t *testing.T, testRegistry string, cmdBuilder func(ClientFactory) *cobra.Command) {
-	root, rm := Mktemp(t)
-	defer rm()
-
 	//this sets the kubeconfig as the rest of the deploy_test.go file tests
 	defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", cwd()))()
+
+	root, rm := Mktemp(t)
+	defer rm()
 
 	client := fn.New(fn.WithRegistry(testRegistry))
 
