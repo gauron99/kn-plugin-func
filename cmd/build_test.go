@@ -157,6 +157,9 @@ func testBuilderPersistence(t *testing.T, testRegistry string, cmdBuilder func(C
 	root, rm := Mktemp(t)
 	defer rm()
 
+	//this sets the kubeconfig as the rest of the deploy_test.go file tests
+	defer WithEnvVar(t, "KUBECONFIG", fmt.Sprintf("%s/testdata/kubeconfig_deploy_namespace", cwd()))()
+
 	client := fn.New(fn.WithRegistry(testRegistry))
 
 	f := fn.Function{Runtime: "go", Root: root, Name: "myfunc", Registry: testRegistry}
