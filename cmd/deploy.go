@@ -233,15 +233,20 @@ func runDeploy(cmd *cobra.Command, newClient ClientFactory) (err error) {
 	if f, err = cfg.Configure(f); err != nil { // Updates f with deploy cfg
 		return
 	}
-
+	fmt.Printf("IMAGE: %s;%s\n", f.Image, cfg.Image)
 	// If using Openshift registry AND redeploying Function, update image registry
 	if f.Namespace != "" && f.Namespace != f.Deploy.Namespace && f.Deploy.Namespace != "" {
-		// when running openshift, namespace is tied to registry, override on --namespace change
-		// The most default part of registry (in buildConfig) checks 'k8s.IsOpenShift()' and if true,
-		// sets default registry by current namespace
+		// When using openshift registry, namespace is tied to registry, override on
+		// --namespace change. The most default part of registry (in buildConfig)
+		// checks 'k8s.IsOpenShift()' and if true, sets default registry by current
+		// namespace which is wrong when using --namespace because the flag is not
+		// taken into consideration at that point. Therefore override it here
 
-		// If Function is being moved to different namespace in Openshift -- update registry
-		if k8s.IsOpenShift() {
+		// If function is being moved to different namespace in Openshift -- update
+		// registry. Nuance: when deploying in OS but using different --registry
+		// (docker.io...) dont override it obviously and use the desired one
+		fmt.Printf("REDEPLOING: %s,\n", f.Registry)
+		if k8s.IsOpenShift() && (strings.HasPrefix(f.Registry, "image-registry.openshift") || f.Registry == "") {
 			// this name is based of k8s package
 			f.Registry = "image-registry.openshift-image-registry.svc:5000/" + f.Namespace
 			if cfg.Verbose {
